@@ -6,7 +6,7 @@
 3. AD1 wild: 5 Puerto Rico (PR);
 4. AD1 wild: 21 Guadeloupe (GD);
 5. AD1 germplasm collections: 10 Cultivar, 10 Landrace1 (LR1), 10 Landrace2 (LR2);
-6. AD2 wild: 9 wild from [Comparative population genomics of relictual Caribbean island Gossypium hirsutum](https://www.biorxiv.org/content/10.1101/2025.06.02.657498v1.abstract)
+6. AD2 wild: 9 wild from [this manuscript](https://www.biorxiv.org/content/10.1101/2025.06.02.657498v1.abstract)
 7. AD4 outgroup: 3 AD4.
 
 ### 2.Reads trimming, mapping to reference genome TEX2094, and calling individual gVCFs. 
@@ -159,5 +159,20 @@ bcftools view YUCFLAD2AD4_n392.Dh_$seq.combined.vcf.gz --threads 10 \
 
 module load parallel/20220522-sxcww47
 parallel tabix {} -f ::: YUCFLAD2AD4_n392.*h_$seq.combined.bi.vcf.gz
-
 ```
+
+### 5. Putting all chromosomes together back to one single VCF for all samples.
+```
+module load picard/2.27.4
+
+picard GatherVcfs \
+$(for vcf in *.combined.bi.vcf.gz; do echo -I "$vcf"; done) \
+-O YUCFLAD2AD4_n392.AhDh.combined.bi.vcf.gz 
+
+ml vcftools bcftools
+
+bcftools reheader -s rename_YUCFLAD2AD4_n392.txt YUCFLAD2AD4_n392.AhDh.combined.bi.vcf.gz -o YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.vcf
+bcftools annotate --set-id +"%CHROM:%POS:%REF:%ALT" YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.vcf >  YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf
+```
+
+### 5. Putting all chromosomes together back to one single VCF for all samples.
