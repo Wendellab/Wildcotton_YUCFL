@@ -256,3 +256,43 @@ combinedProject <- combine.snmfProject("snmf_K1/YUCFLAD2AD4_n392.snmfProject", p
 
 Step4 make the plots with [LEA_plot.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/LEA_plot.R) 
 
+### 8. Major genetic group without outgroup
+```
+
+ml bcftools
+
+module load plink/1.90b6.21
+
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf
+output=AD1380
+
+bcftools query -l $vcf | grep -vE "AD2|AD4" > subset_$output.txt
+
+
+bcftools view -S subset_$output.txt $vcf \
+-m2 -M2 -i 'F_MISSING=0' -q 0.01:minor \
+-o $output.AhDh.combined.maf001.vcf
+
+vcf2=$output.AhDh.combined.maf001.vcf
+
+#Filtering LD by Plink 
+plink --threads 30 --vcf $vcf2 \
+--indep-pairwise 50 10 0.1 --allow-extra-chr --const-fid \
+--out $output
+
+plink --threads 30 --extract $output.prune.in  \
+--make-bed --allow-extra-chr --const-fid --out $output \
+--recode vcf-iid --vcf $vcf2
+
+plink --threads 30 --vcf $vcf2 \
+--allow-extra-chr --const-fid \
+--extract $output.prune.in --recode \
+--make-bed --pca 20 var-wts --genome --distance square 1-ibs --out $output
+
+paste -d '\t'  $output.mdist.id $output.mdist >  $output.distmatrix
+
+module load r
+
+Rscript PCA_plot.R
+
+```
