@@ -1,10 +1,10 @@
 # Population genomic diversity and the domestication history of wild cotton (*Gossypium hirsutum*)
 
 <p float="left">
-  <img src="99_supplemental/WildCottonFiberLike.jpg" height="190" />
-  <img src="99_supplemental/WildCottonFiberLike2.jpg" height="190" /> 
-  <img src="99_supplemental/WildCottonFlower2.jpg" height="190" /> 
-  <img src="99_supplemental/WildCottonMultiBranch.jpg" height="190" /> 
+  <img src="99_supplemental/WildCottonFiberLike.jpg" height="170" />
+  <img src="99_supplemental/WildCottonFiberLike2.jpg" height="170" /> 
+  <img src="99_supplemental/WildCottonFlower2.jpg" height="170" /> 
+  <img src="99_supplemental/WildCottonMultiBranch.jpg" height="170" /> 
 </p>
 
 Top: Field photot of Yucatán wild cottons; Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow 
