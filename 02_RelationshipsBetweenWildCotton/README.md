@@ -44,7 +44,7 @@ library(OptM)
 linear <- optM("./Treemixoutput")
 plot_optM(linear, plot = FALSE, pdf = "Treemodelselection_file.pdf")
 ```
-
+#
 ### 2. Introgression Estimation using [Flare](https://github.com/browning-lab/flare)
 #### step1 subset VCF to exclude AD4, remove fixed heterozygous sites, and phase VCF via Beagle
 ```
@@ -120,8 +120,8 @@ java -Xmx100g -jar flare.jar ref=set2_refgrouplist_AD2YUCFLPRGDPh.vcf.gz \
 	map=Ghirsutum_map_sort_clean.txt \
 	out=set2_refAD2YUCFLPRGDPh_testCulLR1LR2
 ```
-
-### 2. Kmer-based Genetic Relationship Inference between Major Genetic Groups
+#
+### 3. Kmer-based Genetic Relationship Inference between Major Genetic Groups
 #### step1 array clean the reads data using [kraken2](https://benlangmead.github.io/aws-indexes/k2) and [mirabait](https://sourceforge.net/projects/mira-assembler/files/MIRA/development/)
 ```
 #SBATCH --array=253-325
@@ -328,8 +328,8 @@ perl /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/workflow/scr
 -outprefix /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/INTERSEC-n158/n158_graph \
 -classes 10,20,30
 ```
-
-#### step 5 count kmer results in R and group by population using [sortingKmer.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/sortingKmer.R)
+#
+#### step 4 count kmer results in R and group by population using [sortingKmer.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/sortingKmer.R)
 
 ### 3. Plastome Variation 
 #### step1 assemble plastomes
