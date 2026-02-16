@@ -74,14 +74,18 @@ bcftools concat -Oz -o YUCFLAD2AD4_n389.biphased.vcf.gz $(for vcf in *phased*.gz
 bcftools index YUCFLAD2AD4_n389.biphased.vcf.gz
 ```
 
-#### step2 prepare FLARE input
+#### step2 prepare FLARE input. Genetic map from [Zhang et al 2019](https://link.springer.com/article/10.1186/s12864-019-6214-z) 
 ```
+## FLARE assumes that genetic distance increases monotonically along the chromosome. Let's first fix the genetic map file, by removing markers where genetic distance decreases compared to the previous marker in the file. 
+awk '{chr=$1; dist=$3;
+if(chr!=last_chr){last_dist=-1}
+if(dist>=last_dist){print; last_dist=dist} last_chr=chr}' \
+Ghirsutum_map_sort.txt > Ghirsutum_map_sort_clean.txt
+
+
 #wget https://faculty.washington.edu/browning/flare.jar
-
 module load openjdk/21.0.3_9-vngib7s
-
 vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/05_Beagle_n389_nooutgroup/YUCFLAD2AD4_n389.biphased.vcf.gz
-
 ml bcftools
 
 ## we first extract AD2 and YUC as reference, to find out the relationships between other wild cotton populations vs these two.
@@ -118,9 +122,214 @@ java -Xmx100g -jar flare.jar ref=set2_refgrouplist_AD2YUCFLPRGDPh.vcf.gz \
 ```
 
 ### 2. Kmer-based Genetic Relationship Inference between Major Genetic Groups
+#### step1 array clean the reads data using [kraken2](https://benlangmead.github.io/aws-indexes/k2) and [mirabait](https://sourceforge.net/projects/mira-assembler/files/MIRA/development/)
+```
+#SBATCH --array=253-325
+
+DIR=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/00_readsfilter
+thr=20
+
+file1=$(sed -n ${SLURM_ARRAY_TASK_ID}p list_AD1AD2AD4AD5n223.txt)
+file2=$(sed -n ${SLURM_ARRAY_TASK_ID}p list_AD1AD2AD4AD5n223.txt | sed 's/R1[.]fq/R2\.fq/')
+name=$(basename $file1 .R1.fq.gz)
+
+echo "the first file is " $file1
+echo "the second file is " $file2
+echo "sample name is" $name
+
+#cat /lustre/hdd/LAS/jfw-lab/weixuan/09_getorgenelle/00_TEX2094/ncbiAD1mtDNA.fasta /lustre/hdd/LAS/jfw-lab/weixuan/09_getorgenelle/00_TEX2094/plastome_output/TX2094-USDA/embplant_pt.K105.complete.graph1.1.path_sequence.fasta > chloro_mito.fasta
+#wget "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08_GB_20251015.tar.gz"
+#mkdir -p kraken2db
+#tar -xzf k2_standard_08_GB_20251015.tar.gz -C kraken2db
+
+module load kraken2/2.1.2-2kmlv3r
+
+kraken2 $file1 $file2 \
+    --paired \
+	--db kraken2db/ \
+    --classified-out ${name}_contaminated#.fastq \
+    --unclassified-out ${name}_clean#.fastq \
+    --use-names \
+    --gzip-compressed \
+    --threads $thr \
+    --output ${name}_output.txt \
+    --report ${name}_report.txt
+
+mkdir -p 00_cleanread
+mkdir -p 01_cleanreadreport
+mv ${name}_clean_*.fastq 00_cleanread/
+mv ${name}_report.txt 01_cleanreadreport
+rm ${name}_output.txt
+rm ${name}_contaminated_*.fastq
+
+mkdir -p 02_chloro_mito
+
+#wget "https://sourceforge.net/projects/mira-assembler/files/MIRA/development/mira_4.9.6_linux-gnu_x86_64_static.tar.bz2/download"
+#tar -xvjf download
+
+chloro_mito=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/00_readsfilter/chloro_mito.fasta
+
+/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/00_readsfilter/mira_V5rc1_linux-gnu_x86_64_static/bin/mirabait \
+-I \
+-o 02_chloro_mito \
+-N $name \
+-b $chloro_mito \
+-p 00_cleanread/${name}_clean_1.fastq 00_cleanread/${name}_clean_2.fastq \
+-t $thr
+
+mkdir -p 03_nuclear
+module load pigz/2.8-vt5ps6w
+
+pigz -p $thr -c "${name}_miss_${name}_clean_1.fastq" > "03_nuclear/${name}_clean_R1.fq.gz"
+pigz -p $thr -c "${name}_miss_${name}_clean_2.fastq" > "03_nuclear/${name}_clean_R2.fq.gz"
+
+rm ${name}_miss_${name}_clean_*.fastq
+```
+#### step2 set up KmerCity configuration file 
+```
+Data:
+    FastQ_table: "/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/fastq_table_n158.txt"
+
+Outputs:
+    Output_directory: "/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n158_results"
+    Output_prefix: "n158"
+
+Parameters:
+    kat: "--mer_len 50 -H 1000000000"
+    cut_count_threshold: "30"
+    kmer_db_chunk_size: "1000000"
+
+Envmodules:
+    seqtk: "seqtk/1.3-r106"
+    kat: "kat/2.4.2-conda"
+    jellyfish: "jellyfish/2.3.0"
+
+Conda: "workflow/envs/KmerCity_env.yaml"
+
+Container:
+    seqtk: "https://depot.galaxyproject.org/singularity/fusioncatcher-seqtk%3A1.2--h5bf99c6_2"
+    kat: "https://depot.galaxyproject.org/singularity/kat%3A2.4.2--py36h873903e_2"
+    jellyfish: "https://depot.galaxyproject.org/singularity/kmer-jellyfish%3A2.3.0--h7d875b9_2"
 ```
 
+#### step3 also `/lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/slurm/config.yaml` needs to update to system
 ```
+#Rename runtime → walltime in default-resources and set-resources.
+#Update your cluster template to use {resources.walltime}
+#Leave SLURM --time=72:00:00 as-is.
+#Valid partition (nova)  --partition=nova
+
+cluster:
+  mkdir -p logs/{rule} &&
+  sbatch
+    --partition={resources.partition}
+    --mem={resources.mem_mb}
+    --time={resources.walltime}
+    --job-name={rule}
+    --output=logs/{rule}/{rule}_%j.log
+    --error=logs/{rule}/{rule}_%j.log
+
+default-resources:
+  - mem_mb=4096
+  - walltime="72:00:00"
+  - partition=nova
+
+set-resources:
+  - subset_fastq:mem_mb=15000
+  - count_kmers:mem_mb=40000
+  - build_kmer_db:mem_mb=20000
+
+set-threads:
+  - count_kmers=6
+
+restart-times: 3
+max-jobs-per-second: 1
+max-status-checks-per-second: 1
+local-cores: 1
+latency-wait: 60
+jobs: 100
+keep-going: True
+rerun-incomplete: True
+```
+#### step3 prepare input `fastq_table_n158.txt` table use reads information in `/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/00_readsfilter/03_nuclear/*.gz`
+```
+#SBATCH --output="job.KmerCity.%J.out"
+#SBATCH --job-name="KmerCity"
+
+(
+echo -e "Sample\tFastQ\tNbReads\tSeed"
+ls /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/00_readsfilter/03_nuclear/*.gz | sort | while read f; do
+    sample=$(basename "$f" | sed 's/_clean.*//')
+    # If the sample starts with "YUC", keep only the part before the first underscore
+    if [[ $sample == YUC* ]]; then
+        sample=$(echo "$sample" | sed 's/_.*//')
+    fi
+    seed=$(od -vAn -N2 -tu2 < /dev/urandom | tr -d ' ')
+    echo -e "${sample}\t${f}\t6000000\t${seed}"
+done
+) | head -n317 > fastq_table_n158.txt
+
+
+module load snakemake/7.22.0-py310-y4hvhdl
+module load singularity/1.1.9-py310-wsbt4ge
+
+cd /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity
+
+srun --time=72:00:00 \
+     --partition=nova \
+     --job-name="KmerCity_controller" \
+     --output="job.KmerCity_controller.%J.out" \
+	 --cpus-per-task=10 \
+     --mem=150G \
+     --cpu-bind=none \
+     snakemake --configfile config/AD1AD2config.yaml \
+	 --use-singularity \
+	 --profile slurm \
+	 --jobs 40 \
+	 --rerun-incomplete
+
+
+module load perl/5.40.0-l2sxfqz
+module load zlib/1.2.13-wcef3x6
+module load perl-list-moreutils/0.430-6om3ljo
+module load perl-parallel-forkmanager/2.02-vh7wtb2
+module load perl-gd/2.53-u7fgagv
+
+
+perl /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/workflow/scripts/KCounts_2_intersections.pl \
+    -database /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/KMER_database/n137_50mer_cut30x_counts.tab.gz \
+    -outdir /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/ \
+    -prefix n158 
+```
+
+#### step4 clean Kmercity output
+```
+################################################################################
+################################################################################
+
+cd /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/FastQ
+ls -1 -d * > ../INTERSEC-n158/samplelist_n158.txt
+
+cp /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/rename_YUCFLAD2AD4_n392.txt /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/INTERSEC-n158
+sed 's/\\ //g' rename_YUCFLAD2AD4_n392.txt > samplerename.txt
+
+awk 'NR==FNR{keep[$1];next} $1 in keep' samplelist_n158.txt samplerename.txt > matched_n158.txt
+
+cut -d" " -f2 matched_n158.txt | awk -F"_" '{group=$1"_"$2; if(!(group in c)){colors[0]="red";colors[1]="blue";colors[2]="green";colors[3]="orange";colors[4]="purple";colors[5]="cyan";colors[6]="magenta";colors[7]="gray";colors[8]="brown";colors[9]="pink"; c[group]=colors[++n%10]} print $0 "\t" c[group]}' | sort > graph_accession.tab
+
+awk 'NR==FNR{map[$1]=$2;next}{for(i=1;i<=NF;i++){if($i in map)$i=map[$i]}}1' samplerename.txt n158.intersections > n158.intersections.rename.txt
+
+################################################################################
+################################################################################
+
+perl /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/workflow/scripts/Draw_KGraph.pl \
+-in /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/INTERSEC-n158/n158.intersections.rename.txt \
+-list /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/INTERSEC-n158/graph_accession.tab \
+-outprefix /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/04_TE/01_KmerCity/n137_results/INTERSEC-n158/n158_graph \
+-classes 10,20,30
+```
+
+#### step 5 count kmer results in R and group by population using [sortingKmer.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/sortingKmer.R)
 
 ### 3. Plastome Variation 
 ```
