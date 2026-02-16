@@ -9,7 +9,8 @@
   <img src="99_supplemental/TreelookWildCotton.jpg" height="170" /> 
 </p>
 
-Top: Field photot of Yucatán wild cottons; Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow 
+Top: Field photot of Yucatán wild cottons; 
+Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow 
 
 #
 ### Abstract 
