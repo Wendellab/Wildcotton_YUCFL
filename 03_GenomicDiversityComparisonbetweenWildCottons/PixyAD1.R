@@ -326,17 +326,6 @@ Roh_Froh_Plot
 
 ############################################################################################
 ############################################################################################
-
-finalplot <- ggdraw() +
-  draw_plot(plot.inp.pi.avg2, x = 0, y = 0.5, width = 0.5, height = 0.5) +
-  draw_plot(plot.inp.dxy, x = 0.5, y = 0.5, width = 0.5, height = 0.5) +
-  draw_plot(heteperce_Plot, x = 0, y = 0, width = 0.333333, height = 0.5) +
-  draw_plot(f_plot, x = 0.333333, y = 0, width = 0.333333, height = 0.5) +
-  draw_plot(Roh_Froh_Plot, x = 0.666666, y = 0, width = 0.333333, height = 0.5) +
-  
-  draw_plot_label(label = c("a", "b", "c", "d", "e"), size = 17, fontface = "bold",
-                  x = c(0, 0.5, 0, 0.333333, 0.666666), y = c(1, 1, 0.5, 0.5, 0.5))
-
 finalplot2 <- ggdraw() +
   draw_plot(plot.inp.pi.avg2, x = 0, y = 0.5, width = 0.5, height = 0.5) +
   draw_plot(plot.inp.dxy, x = 0.5, y = 0.5, width = 0.5, height = 0.5) +
@@ -352,4 +341,5 @@ finalplot2
 pdf("../Fig4_PixyAD1380_FIS_HE_ROH.pdf", width = 13, height = 9)
 finalplot2
 dev.off()
+
 
