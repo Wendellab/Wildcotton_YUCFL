@@ -136,14 +136,26 @@ micromamba deactivate
 ```
 #### Step6 tabluating output of pixy use [caculated.sh](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/caculated.sh) 
 
-
+#
 ### ROH
-#### Step1 filter fixed heterrozygous site by population in each group
+#### Step1 filter biallelic SNs and rename chromosomes in numeric 1 to 26
 ```
+ml vcftools bcftools
+
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/08_Pixy_n380/00_vcf_nofixed/outputn380_combined/AD1_n380.AhDh.combined.rehead.vcf.gz 
+
+vcftools \
+  --gzvcf $vcf \
+  --min-alleles 2 \
+  --max-alleles 2 \
+  --max-missing 1.0 \
+  --recode \
+  --recode-INFO-all \
+  --out AD1_n380.AhDh.combined.rehead
+
 Dir=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/09_HeInbreedRoh/ROH
 vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/09_HeInbreedRoh/AD1_n380.AhDh.combined.rehead.recode.vcf
 output=AD1_n380
-
 
 ml vcftools bcftools
 grep ">" /lustre/hdd/LAS/jfw-lab/weixuan/00_RefTX0294/AD1.TX2094.v2.fa | sed 's/>//g' | sort | uniq | awk '{printf "%s\t%d\n", $0, NR}' > rename.chr.txt
@@ -158,6 +170,7 @@ module load r
 Rscript ROH.R
 ```
 
+#### Step2 `ROH.R` below
 ```
 setwd(getwd())
 library(detectRUNS)
@@ -183,9 +196,8 @@ save.image(file = "AD1_n380.final.RData")
 plot ROH usin [Final_LD_plot.R
 ](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/Final_LD_plot.R)
 
-
+#
 ### VCFtools
-#### Step1 filter fixed heterrozygous site by population in each group
 ```
 ml vcftools
 
