@@ -140,3 +140,59 @@ micromamba deactivate
 ### ROH
 #### Step1 filter fixed heterrozygous site by population in each group
 ```
+Dir=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/09_HeInbreedRoh/ROH
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/09_HeInbreedRoh/AD1_n380.AhDh.combined.rehead.recode.vcf
+output=AD1_n380
+
+
+ml vcftools bcftools
+grep ">" /lustre/hdd/LAS/jfw-lab/weixuan/00_RefTX0294/AD1.TX2094.v2.fa | sed 's/>//g' | sort | uniq | awk '{printf "%s\t%d\n", $0, NR}' > rename.chr.txt
+bcftools annotate --rename-chrs rename.chr.txt --set-id '%CHROM:%POS:%REF:%ALT' $vcf  -Oz -o $Dir/$output.AhDh.combined.bi.rech.id.vcf.gz
+
+/lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/plink \
+--vcf $output.AhDh.combined.bi.rech.id.vcf.gz \
+--allow-extra-chr --make-bed --const-fid \
+--recode --out $output
+
+module load r
+Rscript ROH.R
+```
+
+```
+setwd(getwd())
+library(detectRUNS)
+
+slidingRuns <- slidingRUNS.run(
+  genotypeFile = "AD1_n380.ped", 
+  mapFile = "AD1_n380.map", 
+  windowSize = 15,   #the size of sliding window (number of SNP loci) (default = 15)
+  threshold = 0.05,  #the threshold of overlapping windows of the same state (homozygous/heterozygous) to call a SNP in a RUN (default = 0.05)
+  minSNP = 10,       #minimum n. of SNP in a RUN (default = 3)
+  ROHet = FALSE,     
+  maxOppWindow = 1,  #max n. of homozygous/heterozygous SNP in the sliding window (default = 1)
+  maxMissWindow = 1, #max. n. of missing SNP in the sliding window (default = 1)
+  maxGap = 10^6,     #max distance between consecutive SNP to be still considered a potential run (default = 10^6 bps) 
+  minLengthBps = 100000,   #minimum length of run in bps (defaults to 1000 bps = 1 kbps)
+  minDensity = 1/10^3, #minimum n. of SNP per kbps (defaults to 0.1 = 1 SNP every 10 kbps)
+  maxOppRun = NULL,
+  maxMissRun = NULL
+) 
+
+save.image(file = "AD1_n380.final.RData")
+```
+plot ROH usin [Final_LD_plot.R
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/Final_LD_plot.R)
+
+
+### VCFtools
+#### Step1 filter fixed heterrozygous site by population in each group
+```
+ml vcftools
+
+# Heterozygosity per individual
+vcftools --vcf AD1_n380.AhDh.combined.rehead.recode.vcf \
+         --het \
+         --out AD1_n380.AhDh.combined.bi
+```
+#
+Final figure [PixyAD1.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/PixyAD1.R)
