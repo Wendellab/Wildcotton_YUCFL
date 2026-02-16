@@ -332,5 +332,45 @@ perl /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/workflow/scr
 #### step 5 count kmer results in R and group by population using [sortingKmer.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/sortingKmer.R)
 
 ### 3. Plastome Variation 
+#### step1 assemble plastomes
 ```
+#SBATCH --output=joblog/job.makePR.%A_%a.out 
+#SBATCH --job-name="getorganelle"
+#SBATCH --array=1-158
+
+module load getorganelle/1.7.7.0-py310-u45ybv3
+
+DIR=/lustre/hdd/LAS/jfw-lab/weixuan/03_Ggvcf/AD1_Yucatan/01_readsrename/trimmedReads
+outputDIR=/lustre/hdd/LAS/jfw-lab/weixuan/09_getorgenelle
+thr=10
+
+file=$(ls -1 $DIR/*.R1.fq.gz | sed -n ${SLURM_ARRAY_TASK_ID}p)
+name=$(basename $file .R1.fq.gz)
+
+get_organelle_from_reads.py -t $thr -1 $DIR/"${name}".R1.fq.gz -2 $DIR/"${name}".R2.fq.gz -o $outputDIR/plastome_output/"${name}" -R 15 -k 21,45,65,85,105 -F embplant_pt
+```
+
+#### step2 align sequences and build a tree
+```
+module load mafft
+module load iqtree2
+file=plastome_subset_n392_sort_A1outgroup_noAD567outgroup.fasta
+
+# MAFFT realign
+realign="${file%.fasta}_realign.fasta"
+mafft --thread 80 "$file" > "$realign"
+
+# trimAl
+trimmed="${realign%.fasta}_trim.fasta"
+/lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/trimal/source/trimal -in "$realign" -out "$trimmed" -nogaps
+
+# IQ-TREE2
+iqtree2 -s "$trimmed" --prefix "$trimmed" -T AUTO -m MFP -B 1000
+
+micromamba activate /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/envs/newick_env
+nw_ed plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.treefile 'i & b<=80' o > plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.treefile
+
+grep -E '>A1' plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta | sed 's/[>]//g' > A1outgrouplist.txt
+module load py-ete3
+python reroot_trees.py plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.treefile A1outgrouplist.txt > plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.reroot.treefile
 ```
