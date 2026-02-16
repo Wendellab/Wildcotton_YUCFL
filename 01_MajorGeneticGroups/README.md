@@ -1,4 +1,4 @@
-## AD1 AD2 AD4 Joint Genotyping 
+## Gh(AD1) Gb(AD2) Gm(AD4) Joint Genotyping 
 
 ### 1. Getting four lists of Gvcfs
 1. AD1 wild: 166 Florida (FL) (141 newly collected + 25 MK);
@@ -122,7 +122,7 @@ bcftools concat --allow-overlaps --threads $thr $output1.Dh_$seq.variant.recode.
 parallel tabix {} ::: $output1.*h_$seq.*combined.vcf.gz
 ```
 
-### 4. Using individual gVCFs we joint-called the variant and invariant site from each population/group that we defined in step1, and filtered seven VCFs.
+### 4. Using individual gVCFs we joint-called the variant and invariant site from each population/group that we defined in step1, and filtered jointed VCFs by chromosome.
 ```
 seq=$(printf %02d ${SLURM_ARRAY_TASK_ID})
 echo "$seq"
@@ -161,7 +161,7 @@ module load parallel/20220522-sxcww47
 parallel tabix {} -f ::: YUCFLAD2AD4_n392.*h_$seq.combined.bi.vcf.gz
 ```
 
-### 5. Putting all chromosomes together back to one single VCF for all samples.
+### 5. Put all chromosomes together back to one single VCF for all samples.
 ```
 module load picard/2.27.4
 
@@ -175,5 +175,83 @@ bcftools reheader -s rename_YUCFLAD2AD4_n392.txt YUCFLAD2AD4_n392.AhDh.combined.
 bcftools annotate --set-id +"%CHROM:%POS:%REF:%ALT" YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.vcf >  YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf
 ```
 
-### 5. Putting all chromosomes together back to one single VCF for all samples.
+### 6. Major genetic group by PCA and NJ tree
+```
+module load plink/1.90b6.21
 
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf
+output=YUCFLAD2AD4_n392
+
+bcftools view $vcf \
+-m2 -M2 -i 'F_MISSING=0' -q 0.01:minor \
+-o $output.AhDh.combined.bi.rehead.id.maf001.vcf
+
+vcf2=$output.AhDh.combined.bi.rehead.id.maf001.vcf
+
+grep -v "#" $vcf | wc -l 
+grep -v "#" $vcf2 | wc -l 
+
+#Filtering LD by Plink 
+plink --threads 30 --vcf $vcf2 \
+--indep-pairwise 50 10 0.1 --allow-extra-chr --const-fid \
+--out $output
+
+plink --threads 30 --extract $output.prune.in  \
+--make-bed --allow-extra-chr --const-fid --out $output \
+--recode vcf-iid --vcf $vcf2
+
+plink --threads 30 --vcf $vcf2 --allow-extra-chr --const-fid \
+--extract $output.prune.in --recode \
+--make-bed --pca 20 var-wts --distance square 1-ibs --out $output
+
+paste -d '\t'  $output.mdist.id $output.mdist >  $output.distmatrix
+
+module load r
+
+Rscript PCA_plot.R
+```
+
+### 7. Major genetic group by LEA
+To run LEA in parallel we divided LEA into three steps: 
+
+[Step1 bash](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step1PCA_lea.sh)  
+[Step1 Rscript file convert
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step1PCA_LEA3.R)```
+module load r
+Rscript step1PCA_LEA3.R
+
+cut -d ' ' -f 2 *.ped > samplename.txt
+```
+
+[Step2 LEA bash in parallel
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step2_lea_parallele.sh)
+[Step2 R script 
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step2_run_snmfparallele.R)```
+#SBATCH --output="job.vcf_n90.%J.out"
+#SBATCH --job-name="jointGeno_n90"
+#SBATCH --array=1-40
+
+module load r
+
+K_values=${SLURM_ARRAY_TASK_ID}
+echo "Running LEA with K=$K_values"
+mkdir -p "snmf_results/snmf_K${K_values}"
+
+cd snmf_results/snmf_K${K_values}
+
+cp /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/LEA_n392/YUCFLAD2AD4_n392.geno ./
+Rscript /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/LEA_n392/step2_run_snmfparallele.R "$K_values"
+```
+
+Step 3 in R merge all LEA Ks into one
+```
+module load r
+library(LEA)
+for (K in 2:40) { 
+project_path <- file.path(paste0("snmf_K", K), "YUCFLAD2AD4_n392.snmfProject") 
+combinedProject <- combine.snmfProject("snmf_K1/YUCFLAD2AD4_n392.snmfProject", project_path)}
+```
+
+Step4 make the plots with [LEA_plot.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/LEA_plot.R) 
+```
+```
