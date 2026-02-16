@@ -21,8 +21,6 @@ library(cowplot)
 ############## Caribbean region ##################################
 ##################################################################
 
-register_google("AIzaSyAFMCC4ztGaZzBKvTMo4ByO5pBZVPhR5tQ") #for the ggmap package
-
 gpsmk <- read.csv("C:/Users/weixuan/Desktop/YUC_wildAD1/Fig0_map/CottonSamplingMap5_ut8.csv", encoding="UTF-8")
 
 
@@ -258,4 +256,5 @@ mapfinalplot <- ggdraw() +
 pdf("FL_YUC_map.pdf", width = 16, height = 8)
 mapfinalplot
 dev.off()
+
 
