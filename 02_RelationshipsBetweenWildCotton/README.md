@@ -48,7 +48,7 @@ plot_optM(linear, plot = FALSE, pdf = "Treemodelselection_file.pdf")
 ### 2. Introgression Estimation using [Flare](https://github.com/browning-lab/flare)
 #### step1 subset VCF to exclude AD4, remove fixed heterozygous sites, and phase VCF via Beagle
 ```
-# subset and filter
+# step1 subset and filter
 module load vcftools bcftools
 chr=$(printf %02d ${SLURM_ARRAY_TASK_ID})
 output=YUCFLAD2AD4_n389.bi
@@ -58,7 +58,7 @@ bcftools query -l $vcf | grep -v "AD4_" > keep_samples.txt
 vcftools --gzvcf $vcf --keep keep_samples.txt --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out $output
 bcftools view --include "F_PASS(GT='het')=1" $output.recode.vcf -o $output.nofixed.vcf
 
-# phase by chromosome
+# step2 phase by chromosome
 #SBATCH --array=1-13
 
 newvcf=$output.nofixed.vcf
@@ -67,7 +67,7 @@ module load openjdk/21.0.3_9-vngib7s
 java -Xmx300g -jar beagle.27Feb25.75f.jar gt=$newvcf out=$output.Ah_$chr.phased chrom=Ah_$chr
 java -Xmx300g -jar beagle.27Feb25.75f.jar gt=$newvcf out=$output.Dh_$chr.phased chrom=Dh_$chr
 
-# joint everything together
+# step3 joint everything together
 ml vcftools bcftools
 for vcf in *phased*.gz; do tabix "$vcf"; done
 bcftools concat -Oz -o YUCFLAD2AD4_n389.biphased.vcf.gz $(for vcf in *phased*.gz; do echo "$vcf"; done)
@@ -119,6 +119,7 @@ java -Xmx100g -jar flare.jar ref=set2_refgrouplist_AD2YUCFLPRGDPh.vcf.gz \
 
 ### 2. Kmer-based Genetic Relationship Inference between Major Genetic Groups
 ```
+
 ```
 
 ### 3. Plastome Variation 
