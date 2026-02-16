@@ -375,6 +375,9 @@ module load py-ete3
 python reroot_trees.py plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.treefile A1outgrouplist.txt > plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.reroot.treefile
 ```
 Whole plastome sequences: https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/plastome_subset_n392_sort_A1outgroup_noAD567outgroup.zip
+
 Aligned whole plastome sequences: https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign.zip
+
 Raw plastome tree: https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.treefile
+
 Rerooted and node collapsed plastome tree: https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/plastome_subset_n392_sort_A1outgroup_noAD567outgroup_realign_trim.fasta.bs80.reroot.treefile
