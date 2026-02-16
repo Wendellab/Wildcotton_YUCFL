@@ -3,8 +3,10 @@
 <p float="left">
   <img src="99_supplemental/WildCottonFiberLike.jpg" height="170" />
   <img src="99_supplemental/WildCottonFiberLike2.jpg" height="170" /> 
+  <img src="99_supplemental/WildCottonFiberLike3.jpg" height="170" /> 
   <img src="99_supplemental/WildCottonFlower2.jpg" height="170" /> 
   <img src="99_supplemental/WildCottonMultiBranch.jpg" height="170" /> 
+  <img src="99_supplemental/TreelookWildCotton.jpg" height="170" /> 
 </p>
 
 Top: Field photot of Yucatán wild cottons; Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow 
