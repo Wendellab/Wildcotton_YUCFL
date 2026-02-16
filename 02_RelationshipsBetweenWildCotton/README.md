@@ -331,7 +331,7 @@ perl /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/kmercity/workflow/scr
 #
 #### step 4 count kmer results in R and group by population using [sortingKmer.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/02_RelationshipsBetweenWildCotton/sortingKmer.R)
 
-### 3. Plastome Variation 
+### 4. Plastome Variation 
 #### step1 assemble plastomes
 ```
 #SBATCH --output=joblog/job.makePR.%A_%a.out 
