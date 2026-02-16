@@ -1,4 +1,4 @@
-## Genomic Diversity Comparison between Wild Cottons using Pixy and Vcftools
+## Genomic Diversity Comparison between Wild Cottons using Pixy, He/Fis and ROH
 
 ### Pixy
 #### Step1 filter fixed heterrozygous site by population in each group
@@ -135,3 +135,8 @@ pixy --stats pi fst dxy watterson_theta tajima_d --bypass_invariant_check --chro
 micromamba deactivate
 ```
 #### Step6 tabluating output of pixy use [caculated.sh](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/caculated.sh) 
+
+
+### ROH
+#### Step1 filter fixed heterrozygous site by population in each group
+```
