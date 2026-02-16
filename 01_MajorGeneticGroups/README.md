@@ -216,7 +216,8 @@ To run LEA in parallel we divided LEA into three steps:
 
 [Step1 bash](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step1PCA_lea.sh)  
 [Step1 Rscript file convert
-](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step1PCA_LEA3.R)```
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step1PCA_LEA3.R)
+```
 module load r
 Rscript step1PCA_LEA3.R
 
@@ -226,7 +227,8 @@ cut -d ' ' -f 2 *.ped > samplename.txt
 [Step2 LEA bash in parallel
 ](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step2_lea_parallele.sh)
 [Step2 R script 
-](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step2_run_snmfparallele.R)```
+](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/step2_run_snmfparallele.R)
+```
 #SBATCH --output="job.vcf_n90.%J.out"
 #SBATCH --job-name="jointGeno_n90"
 #SBATCH --array=1-40
@@ -253,5 +255,4 @@ combinedProject <- combine.snmfProject("snmf_K1/YUCFLAD2AD4_n392.snmfProject", p
 ```
 
 Step4 make the plots with [LEA_plot.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/01_MajorGeneticGroups/LEA_plot.R) 
-```
-```
+
