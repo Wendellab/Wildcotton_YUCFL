@@ -1,18 +1,13 @@
 # Population genomic diversity and the domestication history of wild cotton (*Gossypium hirsutum*)
 
 <p float="left">
-  <img src="Supplementary/Cabo Rojo flower.JPEG" height="170" />
-  <img src="Supplementary/Cabo Rojo population typical view.JPEG" height="170" /> 
-  <img src="Supplementary/Cabo Rojo seeds and fibers 1.JPEG" height="170" /> 
-  <img src="Supplementary/PR325 Salinas Providencia Population 11.JPEG" height="170" /> 
-  <br>
-	<img src="Supplementary/YUC_boll.jpg" height="170" />
-	<img src="Supplementary/YUC_buds copy.jpg" height="170" /> 
-	<img src="Supplementary/YUC_flower.jpg" height="170" /> 
+  <img src="99_supplemental/WildCottonFiberLike.jpg" height="190" />
+  <img src="99_supplemental/WildCottonFiberLike2.jpg" height="190" /> 
+  <img src="99_supplemental/WildCottonFlower2.jpg" height="190" /> 
+  <img src="99_supplemental/WildCottonMultiBranch.jpg" height="190" /> 
 </p>
 
-Top: Field collections of Puerto Rican cotton.
-Bottom: Greenhouse planted Guadeloupe cotton.
+Top: Field photot of Yucatán wild cottons; Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow 
 
 #
 ### Abstract 
