@@ -46,7 +46,75 @@ plot_optM(linear, plot = FALSE, pdf = "Treemodelselection_file.pdf")
 ```
 
 ### 2. Introgression Estimation using [Flare](https://github.com/browning-lab/flare)
+#### step1 subset VCF to exclude AD4, remove fixed heterozygous sites, and phase VCF via Beagle
 ```
+# subset and filter
+module load vcftools bcftools
+chr=$(printf %02d ${SLURM_ARRAY_TASK_ID})
+output=YUCFLAD2AD4_n389.bi
+
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf
+bcftools query -l $vcf | grep -v "AD4_" > keep_samples.txt
+vcftools --gzvcf $vcf --keep keep_samples.txt --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out $output
+bcftools view --include "F_PASS(GT='het')=1" $output.recode.vcf -o $output.nofixed.vcf
+
+# phase by chromosome
+#SBATCH --array=1-13
+
+newvcf=$output.nofixed.vcf
+module load openjdk/21.0.3_9-vngib7s
+
+java -Xmx300g -jar beagle.27Feb25.75f.jar gt=$newvcf out=$output.Ah_$chr.phased chrom=Ah_$chr
+java -Xmx300g -jar beagle.27Feb25.75f.jar gt=$newvcf out=$output.Dh_$chr.phased chrom=Dh_$chr
+
+# joint everything together
+ml vcftools bcftools
+for vcf in *phased*.gz; do tabix "$vcf"; done
+bcftools concat -Oz -o YUCFLAD2AD4_n389.biphased.vcf.gz $(for vcf in *phased*.gz; do echo "$vcf"; done)
+bcftools index YUCFLAD2AD4_n389.biphased.vcf.gz
+```
+
+#### step2 prepare FLARE input
+```
+#wget https://faculty.washington.edu/browning/flare.jar
+
+module load openjdk/21.0.3_9-vngib7s
+
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/05_Beagle_n389_nooutgroup/YUCFLAD2AD4_n389.biphased.vcf.gz
+
+ml bcftools
+
+## we first extract AD2 and YUC as reference, to find out the relationships between other wild cotton populations vs these two.
+
+bcftools query -l $vcf | grep -E 'AD2|YUC' > set1_refgrouplist_AD2YUC.txt
+bcftools view -S set1_refgrouplist_AD2YUC.txt $vcf -Oz -o set1_refgrouplist_AD2YUC.vcf.gz
+awk -F'_' '{print $0 "\t" $1 "_"$2 }' set1_refgrouplist_AD2YUC.txt > set1_refpanel_AD2YUC.txt
+
+bcftools query -l $vcf | grep -E 'FL|GD|Ph' > set1_testgrouplist_FLGDPh.txt
+bcftools view -S set1_testgrouplist_FLGDPh.txt $vcf -Oz -o set1_testgrouplist_FLGDPh.vcf.gz
+
+java -Xmx100g -jar flare.jar ref=set1_refgrouplist_AD2YUC.vcf.gz \
+	ref-panel=set1_refpanel_AD2YUC.txt \
+	gt=set1_testgrouplist_FLGDPh.vcf.gz \
+	map=Ghirsutum_map_sort_clean.txt \
+	out=set1_refAD2YUC_testFLGDPh
+
+
+## we second test all domesticated cottons vs all AD1 wild cotton populations and AD2
+
+bcftools query -l $vcf | grep -E 'AD2|FL|YUC|GD|Ph' > set2_refgrouplist_AD2YUCFLPRGDPh.txt
+bcftools view -S set2_refgrouplist_AD2YUCFLPRGDPh.txt $vcf -Oz -o set2_refgrouplist_AD2YUCFLPRGDPh.vcf.gz
+awk -F'_' '{print $0 "\t" $1 "_"$2 }' set2_refgrouplist_AD2YUCFLPRGDPh.txt > set2_refpanel_AD2YUCFLPRGDPh.txt
+
+bcftools query -l $vcf | grep -E 'Cultivar|LR1|LR2' > set2_testgrouplist_CulLR1LR2.txt
+bcftools view -S set2_testgrouplist_CulLR1LR2.txt $vcf -Oz -o set2_testgrouplist_CulLR1LR2.vcf.gz
+
+
+java -Xmx100g -jar flare.jar ref=set2_refgrouplist_AD2YUCFLPRGDPh.vcf.gz \
+	ref-panel=set2_refpanel_AD2YUCFLPRGDPh.txt \
+	gt=set2_testgrouplist_CulLR1LR2.vcf.gz \
+	map=Ghirsutum_map_sort_clean.txt \
+	out=set2_refAD2YUCFLPRGDPh_testCulLR1LR2
 ```
 
 ### 2. Kmer-based Genetic Relationship Inference between Major Genetic Groups
