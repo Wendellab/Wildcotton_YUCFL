@@ -11,8 +11,6 @@ PI_RATIO_HIGH_Q <- 0.99
 PI_RATIO_LOW_Q  <- 0.01
 FST_HIGH_Q      <- 0.95
 
-#
-#
 
 Cultivar.pi <- read.csv("all_Cultivar_pi.windowed.pi", sep="", header=TRUE)
 YUC.pi <- read.csv("all_YUC_pi.windowed.pi", sep="", header=TRUE)
@@ -29,55 +27,17 @@ YUC_Cultivar_pi <- Cultivar.pi %>%
     #PI_ratio<=quantile(PI_ratio, 0.05) ~ "High_diversity_introgression",
     TRUE ~ NA_character_))
 
-#
-#
-
 YUC_Cultivar_fst <- read.csv("all_fst.windowed.weir.fst", sep="", header=TRUE) %>%
   mutate(BIN_MID=(BIN_START+BIN_END)/2) %>%
   filter(if("N_VARIANTS" %in% colnames(.)) N_VARIANTS>=10 else TRUE) %>%
   mutate(selection_FST=case_when(WEIGHTED_FST>=quantile(WEIGHTED_FST, 0.95) ~ "High_FST", TRUE~NA_character_))
 
-#
-#
 YUC_Cultivar_xpclr <- read.csv("all_Cultivar_Wild_xpclr.txt", sep="", header=TRUE) %>%
   mutate(BIN_MID=(start+stop)/2) %>%
   filter(if("nSNPs" %in% colnames(.)) nSNPs >=10 else TRUE) %>%
   mutate(selection_xpclr=case_when(xpclr_norm>=quantile(xpclr_norm, 0.95) ~ "High_xpclr", TRUE~NA_character_))
 
 ################################################################
-
-
-
-
-ggplot(YUC_Cultivar_pi, aes(x=BIN_MID, y=PI_ratio)) +
-  geom_point(size=0.6, alpha=0.7, color="grey50") +
-  geom_point(data=YUC_Cultivar_pi %>% filter(!is.na(selection_PI)), aes(color=selection_PI), size=0.8) +
-  facet_wrap(~CHROM, ncol=1, scales="fixed", strip.position="right") +
-  labs(title="PI Ratio (YUC / Cultivar) with Selection Signals", x="Genomic Position", y="PI Ratio") +
-  theme_bw() +
-  scale_color_manual(values=c("Low_diversity_domestication"="red","High_diversity_introgression"="blue"))
-
-ggplot(YUC_Cultivar_fst, aes(x=BIN_MID, y=WEIGHTED_FST)) +
-  geom_point(size=0.6, alpha=0.7, color="grey50") +
-  geom_point(data=YUC_Cultivar_fst %>% filter(!is.na(selection_FST)), aes(color=selection_FST), size=0.8) +
-  facet_wrap(~CHROM, ncol=1, scales="fixed", strip.position="right") +
-  labs(title="FST (Weighted) with Top 5% Signals", x="Genomic Position", y="Weighted FST") +
-  theme_bw() +
-  scale_color_manual(values=c("High_FST"="red"))
-
-ggplot(YUC_Cultivar_xpclr, aes(x=BIN_MID, y=xpclr_norm)) +
-  geom_point(size=0.6, alpha=0.7, color="grey50") +
-  geom_point(data = YUC_Cultivar_xpclr %>% filter(!is.na(selection_xpclr)),
-             aes(color=selection_xpclr), size=0.8) +
-  facet_wrap(~chrom, ncol=1, scales="fixed", strip.position="right") +
-  labs(title="XP-CLR Scores with Selection Signals", x="Genomic Position", y="Normalized XP-CLR") +
-  theme_bw() +
-  scale_color_manual(values=c("High_xpclr"="red"))
-dev.off()
-
-#
-#
-#
 ################################################################
 
 combined_select <- YUC_Cultivar_pi %>%
@@ -116,8 +76,8 @@ combined_select_all_signals <- combined_select_all_signals %>%
                                                 "PI + XP-CLR",
                                                 "FST + XP-CLR",
                                                 "PI + FST + XP-CLR")))
-#
-#
+         
+############################################################################
 
 library(dplyr)
 library(ggplot2)
@@ -186,13 +146,7 @@ plotdistribution <- ggplot() +
     panel.grid.major.y = element_blank(),
     panel.grid.minor = element_blank()  )
   
-
-plotdistribution
-
 ######################################################################################
-
-
-
 finalplot <- ggdraw() +
   draw_plot(structureplot, x = 0, y = 0, width = 0.4, height = 1) +
   draw_plot(plotdistribution, x = 0.4, y = 0, width = 0.6, height = 1)+ 
@@ -205,14 +159,7 @@ finalplot
 dev.off()
 
 
-png("../Fig6_selection_plot.png", 
-    width = 13, 
-    height = 7, 
-    units = "in",  # 单位设为英寸
-    res = 300)     # 分辨率，300dpi适用于大多数出版
-finalplot
-dev.off()
-
+######################################################################################
 ######################################################################################
 
 #compute length of each window
@@ -232,11 +179,7 @@ signal_summary_total <- bind_rows(
   summarise(signal_summary,
             signal_combination = "Total",
             total_length = sum(total_length),
-            fraction = sum(fraction))
-)
-
-signal_summary_total
-
+            fraction = sum(fraction)))
 
 # total genome length
 genome_length <- sum(chrom_lengths$LENGTH)
@@ -277,7 +220,6 @@ selected_proteins <- protein_fa[Reduce("|", lapply(selected_gene_ids, \(g) start
 # save
 writeXStringSet(selected_proteins, "selected_genes_proteins.fa")
 
-
 #####################################################################################
 
 selected_windows <- combined_select_all_signals %>% 
@@ -290,13 +232,14 @@ overlapping_genes_unique <- as.data.frame(genes_gr[subjectHits(findOverlaps(sele
   select(seqnames, start, end, strand, gene_id) %>% 
   distinct(gene_id, .keep_all = TRUE)
 
-# 5️⃣ Extract protein sequences
+# Extract protein sequences
 protein_fa <- readAAStringSet("AD1.TX2094.v2.aa.fa")
 idx <- Reduce("|", lapply(overlapping_genes_unique$gene_id, function(g) startsWith(names(protein_fa), g)))
 selected_proteins <- protein_fa[idx]
 
-# 6️⃣ Save selected proteins
+# Save selected proteins
 writeXStringSet(selected_proteins, "selected_genes_PI_FST_XPCLR_proteins.fa")
+
 
 
 
