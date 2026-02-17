@@ -48,64 +48,6 @@ safe_shape_palette <- c("FL"= 19,
                         'AD2'= 1,
                         'AD4'= 2)
 
-#######################################################################
-####################################################################
-####################################################################
-
-
-heteperce <- read.csv("../../Fig3_Pixy_He_FIS_ROH/Fig3_Pixy_AD1n380/AD1_n380.AhDh.combined.bi.het", sep = '\t') %>%
-  rename(INDV = INDV, O_HOM = O.HOM., E_HOM = E.HOM., N_SITES = N_SITES, F = F) %>%
-  mutate(prefix = str_extract(INDV, "^[^_]+_[^_]+"),
-         group = case_when(str_detect(INDV, "^AD1_YUC_RiCh") ~ "AD1_YUC-E",
-                           str_detect(INDV, "^AD1_YUC_RiCa") ~ "AD1_YUC-E",
-                           str_detect(INDV, "^AD1_YUC_") ~ "AD1_YUC-W",
-                           TRUE ~ prefix),
-         He = ((N_SITES - O_HOM) / N_SITES)*100)  %>%
-  mutate(group = gsub("AD1_","", group),    
-         group2 = str_extract(INDV, "(?<=AD1_)[^_]+_[^_]+"),
-         group2 = if_else( str_starts(group2, "GD_"),"GD",group2)) %>%
-  filter(!str_detect(group2, "Cultivar|LR|PR|GD"))  %>%
-  select(-prefix)
-
-# Compute the ordering and convert group2 to a factor
-heteperce <- heteperce %>%
-  group_by(group2, group) %>%
-  summarise(mean_He = mean(He, na.rm = TRUE), .groups = "drop") %>%
-  arrange(factor(group, levels = c("FL", "YUC")), mean_He) %>%
-  mutate(group2_ordered = factor(group2, levels = unique(group2))) %>%
-  right_join(heteperce, by = c("group2", "group")) %>%
-  mutate(group2 = group2_ordered) %>%
-  select(-group2_ordered, -mean_He)
-
-heteperce_Plot <- ggplot(heteperce, aes(x=group2, y=He, fill = group2)) + 
-  geom_boxplot(show.legend = F, width = 0.7, alpha = 0.5, outlier.shape = NA) + 
-  geom_text(aes(label = formatC(after_stat(y), format = "f", digits  = 1), group = group2), size = 3,
-            stat = 'summary', fun = mean,  nudge_y = 3 , color="blue") +
-  stat_summary(fun.y=mean, geom="point", shape=18, size=3, color="blue", fill="blue") +
-  scale_fill_manual(values=safe_colorblind_palette)  +
-  geom_jitter(color="black", size=1, alpha=0.9) +
-  #xlab("Populations/Groups") +
-  ylim(1.5, 11.5) +
-  ylab("Heterozygous sites (%)") +
-  theme_classic() +
-  theme(legend.position = "none",
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = -45, v = -0.5, size = 10),
-        panel.border = element_rect(colour = "black", fill=NA)) +
-  coord_flip()
-heteperce_Plot
-
-
-
-
-
-
-
-
-
-
-
-
 #####################################################################
 ####################################################################
 ####################################################################
@@ -123,24 +65,18 @@ gpsmk3 <- gpsmk %>%
   select(Region, Individual, Site, lat, long )%>%
   add_count(Site, name = 'id_occurence') 
 
-#write.csv(gpsmk3, "supplementarytable.csv", quote = F, row.names = F)
-
-
-
-
-
-
-
-
-#####################################################################
-####################################################################
-####################################################################
 gpsmk4 <- gpsmk3 %>%
   select(!Individual) %>%
   mutate(Site2 = str_extract(Site, "_[^_]*"))%>%
   mutate(Site2 = gsub("_","", Site2)) %>%
   mutate(group = Site) %>%
   distinct(Site, .keep_all = TRUE)
+
+
+#####################################################################
+####################################################################
+####################################################################
+
 
 FLgeoDxy <- gpsmk4 %>%
   filter(Region == "Florida") %>%
@@ -190,13 +126,6 @@ FLdxygeo.plot
 ####################################################################
 ####################################################################
 
-
-
-
-
-####################################################################
-####################################################################
-####################################################################
 YUCgeoDxy <- gpsmk4 %>%
   filter(Region == "Yucatan") %>%
   select("Site2", "lat", "long")  %>%
@@ -286,10 +215,6 @@ pca2 <- pca %>%
   #mutate(label2 = gsub("AD4_mus*", "Gm_outgroup", label2)) %>%
   mutate(Population = gsub("AD1_*", "", Population)) %>%
   mutate(Population = stringr::str_extract(Population, "[^_]*_[^_]*")) %>%
-  mutate(Population = gsub("GD_.*", "GD", Population)) %>%
-  mutate(Population = gsub("Cultivar_.*", "Cultivar", Population)) %>%
-  mutate(Population = gsub("LR1_.*", "LR1", Population)) %>%
-  mutate(Population = gsub("LR2_.*", "LR2", Population)) %>%
   mutate(Population2 = stringr::str_extract(Population, "[^_]*")) %>%
   mutate(Population3 = gsub("FL_", "", Population)) %>%
   mutate_at('Population', ~replace_na(.,""))  %>%
@@ -345,10 +270,6 @@ pca2 <- pca %>%
   #mutate(label2 = gsub("AD4_mus*", "Gm_outgroup", label2)) %>%
   mutate(Population = gsub("AD1_*", "", Population)) %>%
   mutate(Population = stringr::str_extract(Population, "[^_]*_[^_]*")) %>%
-  mutate(Population = gsub("GD_.*", "GD", Population)) %>%
-  mutate(Population = gsub("Cultivar_.*", "Cultivar", Population)) %>%
-  mutate(Population = gsub("LR1_.*", "LR1", Population)) %>%
-  mutate(Population = gsub("LR2_.*", "LR2", Population)) %>%
   mutate(Population2 = stringr::str_extract(Population, "[^_]*")) %>%
   mutate(Population3 = gsub("YUC_", "", Population)) %>%
   mutate_at('Population', ~replace_na(.,""))  %>%
@@ -381,16 +302,8 @@ pca_plotYUC <- ggplot(pca2,aes(PC1, PC2, color = Population, shape = Population2
 ########################################################################
 ########################################################################
 ########################################################################
-
-
 library(cowplot)
 
-#finalplot <- ggdraw() +
-#  draw_plot(heteperce_Plot, x = 0, y = 0.6, width = 1, height = 0.4) +
-#  draw_plot(YUCdxygeo.plot, x = 0, y = 0, width = 0.5, height = 0.6) +
-#  draw_plot(FLdxygeo.plot , x = 0.5, y = 0, width = 0.5, height = 0.6) +
-#  draw_plot_label(label = c("A", "B", "C"), size = 15,  fontface = "bold",
-#                  x = c(0, 0, 0.5), y = c(1, 0.6,0.6))
 finalplot <- ggdraw() +
   draw_plot(pca_plotYUC, x=0, y=0.5, width=1/3, height=0.5) +
   draw_plot(YUCpie, x=1/3, y=0.5, width=1/3, height=0.5) +
@@ -400,120 +313,7 @@ finalplot <- ggdraw() +
   draw_plot(FLdxygeo.plot, x=2/3, y=0, width=1/3, height=0.5) +
   draw_plot_label(label=c("a","b","c","d","e","f"), size=16, fontface="bold",
                   x=c(0,1/3,2/3,0,1/3,2/3), y=c(1,1,1,0.5,0.5,0.5))
-finalplot
 
-
-
-finalplot <- ggdraw() +
-  draw_plot(heteperce_Plot, x = 0, y = 0, width = 0.2, height = 1) +
-  draw_plot(pca_plotYUC, x = 0.2, y = 0.5, width = 0.4, height = 0.5) +
-  draw_plot(YUCdxygeo.plot , x = 0.6, y = 0.5, width = 0.4, height = 0.5) +
-  draw_plot(pca_plotFL, x = 0.2, y = 0, width = 0.4, height = 0.5) +
-  draw_plot(FLdxygeo.plot, x = 0.6, y = 0, width = 0.4, height = 0.5) +
-  draw_plot_label(label = c("a", "b", "c", "d", "e"), size = 15, fontface = "bold",
-                  x = c(0, 0.2, 0.6, 0.2, 0.6), 
-                  y = c(1, 1, 1, 0.5, 0.5))                        
-
-pdf("../Fig4_Het_PopStructure_GeovsGenetic_FLYUC_v2.pdf", width = 16, height = 10)
+pdf("../Fig5_Het_PopStructure_GeovsGenetic_FLYUC_v2.pdf", width = 16, height = 10)
 finalplot
 dev.off()
-
-
-
-
-
-
-
-############################ Mantal test ###########################################
-####################################################################################
-####################################################################################
-library(vegan)
-library(tidyr)
-
-FLdxy2 <- FLdxy %>% separate(group, into = c("Pop1", "Pop2"), sep = "_") 
-pops <- unique(c(FLdxy2$Pop1, FLdxy2$Pop2))
-dist_matrix <- matrix(NA, nrow = length(pops), ncol = length(pops),
-                      dimnames = list(pops, pops))
-
-for (i in 1:nrow(FLdxy2)) {
-  p1 <- FLdxy2$Pop1[i]
-  p2 <- FLdxy2$Pop2[i]
-  val <- FLdxy2$genedis[i]
-  dist_matrix[p1, p2] <- val
-  dist_matrix[p2, p1] <- val  # symmetric
-  dist_matrix[p1, p1] <- 0
-  dist_matrix[p2, p2] <- 0}
-
-sorted_pops <- sort(rownames(dist_matrix))
-dist_matrix_sorted <- dist_matrix[sorted_pops, sorted_pops]
-FL_genedist <- as.dist(dist_matrix_sorted)
-
-
-
-FLgeodis.melt2 <- FLgeodis.melt %>% separate(group, into = c("Pop1", "Pop2"), sep = "_") 
-pops <- unique(c(FLgeodis.melt2$Pop1, FLgeodis.melt2$Pop2))
-dist_matrix <- matrix(NA, nrow = length(pops), ncol = length(pops),
-                      dimnames = list(pops, pops))
-
-for (i in 1:nrow(FLgeodis.melt2)) {
-  p1 <- FLgeodis.melt2$Pop1[i]
-  p2 <- FLgeodis.melt2$Pop2[i]
-  val <- FLgeodis.melt2$geodis[i]
-  dist_matrix[p1, p2] <- val
-  dist_matrix[p2, p1] <- val  # symmetric
-  dist_matrix[p1, p1] <- 0
-  dist_matrix[p2, p2] <- 0}
-
-sorted_pops <- sort(rownames(dist_matrix))
-dist_matrix_sorted <- dist_matrix[sorted_pops, sorted_pops]
-FL_geodist <- as.dist(dist_matrix_sorted)
-
-
-FLmantel_result <- mantel(FL_genedist, FL_geodist, method = "pearson", permutations = 999)
-print(FLmantel_result)
-
-
-######################################
-
-
-YUCdxy2 <- YUCdxy %>% separate(group, into = c("Pop1", "Pop2"), sep = "_") 
-pops <- unique(c(YUCdxy2$Pop1, YUCdxy2$Pop2))
-dist_matrix <- matrix(NA, nrow = length(pops), ncol = length(pops),
-                      dimnames = list(pops, pops))
-
-for (i in 1:nrow(YUCdxy2)) {
-  p1 <- YUCdxy2$Pop1[i]
-  p2 <- YUCdxy2$Pop2[i]
-  val <- YUCdxy2$genedis[i]
-  dist_matrix[p1, p2] <- val
-  dist_matrix[p2, p1] <- val  # symmetric
-  dist_matrix[p1, p1] <- 0
-  dist_matrix[p2, p2] <- 0}
-
-sorted_pops <- sort(rownames(dist_matrix))
-dist_matrix_sorted <- dist_matrix[sorted_pops, sorted_pops]
-YUC_genedist <- as.dist(dist_matrix_sorted)
-
-
-
-YUCgeodis.melt2 <- YUCgeodis.melt %>% separate(group, into = c("Pop1", "Pop2"), sep = "_") 
-pops <- unique(c(YUCgeodis.melt2$Pop1, YUCgeodis.melt2$Pop2))
-dist_matrix <- matrix(NA, nrow = length(pops), ncol = length(pops),
-                      dimnames = list(pops, pops))
-
-for (i in 1:nrow(YUCgeodis.melt2)) {
-  p1 <- YUCgeodis.melt2$Pop1[i]
-  p2 <- YUCgeodis.melt2$Pop2[i]
-  val <- YUCgeodis.melt2$geodis[i]
-  dist_matrix[p1, p2] <- val
-  dist_matrix[p2, p1] <- val  # symmetric
-  dist_matrix[p1, p1] <- 0
-  dist_matrix[p2, p2] <- 0}
-
-sorted_pops <- sort(rownames(dist_matrix))
-dist_matrix_sorted <- dist_matrix[sorted_pops, sorted_pops]
-YUC_geodist <- as.dist(dist_matrix_sorted)
-
-
-YUCmantel_result <- mantel(YUC_genedist, YUC_geodist, method = "pearson", permutations = 999)
-print(YUCmantel_result)
