@@ -30,7 +30,6 @@ cd $Dir
 #mkdir $output1
 
 module load sentieon-genomics/202308.02-e2gz6fb
-export SENTIEON_LICENSE=reimu.las.iastate.edu:8990
 
 #joint SNP calling:
 
