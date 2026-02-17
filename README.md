@@ -19,8 +19,10 @@ Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow
 ### Manuscript link: to be updated
 
 #
-#### Rawreads trimming to final VCF construction: [00_BuildingGVCFs](https://github.com/Wendellab/CaribbeanAD1/tree/main/00_BuildingGVCFs)
-
-#### Identifying wild Gb samples: [01_OutgroupSelection_n51](https://github.com/Wendellab/CaribbeanAD1/tree/main/01_OutgroupSelection_n51)
-
-#### Identifying feral Gh samples: [02_FeralCottonPR_n145](https://github.com/Wendellab/CaribbeanAD1/tree/main/02_FeralCottonPR_n145)
+#### 00_RefGenomeTEX2094
+#### 01_MajorGeneticGroups
+#### 02_RelationshipsBetweenWildCotton
+#### 03_GenomicDiversityComparisonbetweenWildCottons
+#### 04_GeneticStructurewithinYUCFL
+#### 05_WildCottonTEandGeneticload
+#### 06_SelectionScan
