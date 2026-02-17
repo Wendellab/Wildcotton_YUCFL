@@ -361,20 +361,40 @@ for chr in Ah_{01..13} Dh_{01..13}; do
 
 	echo "$chr done."
 done
+
+
+## Add all bed files together and filter GERP score > 4
+mkdir -p 04_vcfgerpcount
+cat 03_gerpscore/*.pos.bed > 04_vcfgerpcount/01_all_GERP_pos.bed
+cd /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/03_gerpRefGenomes/01_cactusalign/cactus_maf/04_vcfgerpcount
+awk '$5 > 4' 01_all_GERP_pos.bed > 02_all_GERP_pos_4plus.bed
 ```
 
 #### 3.3 Adding the RS scores as an annotation to the candidate VCF
 ```
-mkdir -p 04_vcfgerpcount
+ml bcftools
+VCF=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/05_SIFT4G/AD1AD4_n381_bi.recode.nofixed.vcf
+OUT=06_AD1_n381.GT.tsv
 
-cat 03_gerpscore/*.pos.bed > 04_vcfgerpcount/all_GERP_pos.bed
+bgzip -c $VCF > AD1AD4_n381.vcf.gz
+tabix -p vcf AD1AD4_n381.vcf.gz
 
-cd /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/03_gerpRefGenomes/01_cactusalign/cactus_maf/04_vcfgerpcount
+# give output a head with  CHROM\tPOS\tSampleIDs
+echo -e "CHROM\tPOS\t$(bcftools query -l AD1AD4_n381.vcf.gz | tr '\n' '\t')" > $OUT
 
-module load bedtools2/2.31.1-py311-6kemgt3
+# extract only CHROM, POS, genotype for positions with GERP > 4 
+bcftools view --threads 8 -R <(tail -n +2 02_all_GERP_pos_4plus.header.bed) AD1AD4_n381.vcf.gz \
+| bcftools query -f '%CHROM\t%POS\t[%GT\t]\n' >> $OUT
 
-vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/04_AD1AD2AD4_n380/YUCFLAD2AD4_n380.AhDh.combined.bi.rehead.id.vcf
-gerpbed=all_GERP_pos.bed
+# add gerp score to genotype file
+awk 'FNR==1 && NR==FNR{bed_header=$0; next}
+     NR==FNR{bed[$1 FS $3]=$0; next}
+     FNR==1{print bed_header "\t" $0; next}
+     {key=$1 FS $2; if(key in bed) print bed[key] "\t" $0}' \
+     02_all_GERP_pos_4plus.header.bed $OUT > 07_n381_merged_GT_gerp.tsv
 
-bedtools intersect -a $vcf -b $gerpbed -header > YUCFLAD2AD4_n380.varintgerp.vcf
+#last column is outgroup here has to be 0/0
+awk 'NR==1 || $NF!="0/0"' 07_n381_merged_GT_gerp.tsv > 08_n381_merged_GT_gerp_outgroupfilter.tsv
+
+cut -f6,7 08_n381_merged_GT_gerp_outgroupfilter.tsv  > 09_GERP_VCFpos_4plus_withinVCF_outgroup0.txt
 ```
