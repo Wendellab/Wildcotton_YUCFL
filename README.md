@@ -20,9 +20,23 @@ Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow
 
 #
 #### 00_RefGenomeTEX2094
+Reference genome preparation and indexing for TEX2094.
+
 #### 01_MajorGeneticGroups
+Analysis of major genetic groups (excluding outgroup).
+
 #### 02_RelationshipsBetweenWildCotton
+Phylogenetic and population relationship analyses among wild cotton species.
+
 #### 03_GenomicDiversityComparisonbetweenWildCottons
+Comparative analyses of genomic diversity across wild cotton taxa.
+
 #### 04_GeneticStructurewithinYUCFL
+Population structure analyses within YUCFL populations.
+
 #### 05_WildCottonTEandGeneticload
+Transposable element profiling and genetic load estimation in wild cottons.
+
 #### 06_SelectionScan
+Genome-wide selection scan analyses.
+
