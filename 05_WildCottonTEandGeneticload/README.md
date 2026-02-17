@@ -1,4 +1,4 @@
 # Pipeline for estimating genetic load using:
-# GERP
-# SIFT4G
-# SnpEff
+## 1. GERP
+## 2. SIFT4G
+## 3. SnpEff
