@@ -19,24 +19,24 @@ Photo resource: iNaturalist https://www.inaturalist.org/people/treegrow
 #### Manuscript link: to be updated
 
 #
-#### 00_RefGenomeTEX2094
-Reference genome preparation and indexing for TEX2094.
+#### [00_RefGenomeTEX2094](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/00_RefGenomeTEX2094)
+Reference genome assembly and annotation (TE/gene) for TEX2094.
 
-#### 01_MajorGeneticGroups
-Analysis of major genetic groups (excluding outgroup).
+#### [01_MajorGeneticGroups](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/01_MajorGeneticGroups)
+Analysis of major genetic groups.
 
-#### 02_RelationshipsBetweenWildCotton
+#### [02_RelationshipsBetweenWildCotton](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/02_RelationshipsBetweenWildCotton)
 Phylogenetic and population relationship analyses among wild cotton species.
 
-#### 03_GenomicDiversityComparisonbetweenWildCottons
-Comparative analyses of genomic diversity across wild cotton taxa.
+#### [03_GenomicDiversityComparisonbetweenWildCottons](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/03_GenomicDiversityComparisonbetweenWildCottons)
+Comparative analyses of genomic diversity across wild cotton populations.
 
-#### 04_GeneticStructurewithinYUCFL
-Population structure analyses within YUCFL populations.
+#### [04_GeneticStructurewithinYUCFL](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/04_%20GeneticStructurewithinYUCFL)
+Population structure analyses within YUC and FL populations.
 
-#### 05_WildCottonTEandGeneticload
+#### [05_WildCottonTEandGeneticload](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/05_WildCottonTEandGeneticload)
 Transposable element profiling and genetic load estimation in wild cottons.
 
-#### 06_SelectionScan
+#### [06_SelectionScan](https://github.com/Wendellab/Wildcotton_YUCFL/tree/main/06_SelectionScan)
 Genome-wide selection scan analyses.
 
