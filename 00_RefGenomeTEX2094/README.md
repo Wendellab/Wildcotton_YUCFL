@@ -1,5 +1,31 @@
 Need Josh and Tony's input here for the reference genome assmbely and annotation
 
+##
+###
+```
+# BUSCO version is: 5.8.2 
+# The lineage dataset is: eudicotyledons_odb12 (Creation date: 2025-04-11, number of genomes: 76, number of BUSCOs: 2805)
+# Summarized benchmarking in BUSCO notation for file /local/scratch/maa146/5557867/AD1.TX2094.v2.fa
+# BUSCO was run in mode: euk_genome_min
+# Gene predictor used: miniprot
+
+	***** Results: *****
+
+	C:99.3%[S:2.1%,D:97.1%],F:0.4%,M:0.4%,n:2805,E:0.7%	   
+	2784	Complete BUSCOs (C)	(of which 20 contain internal stop codons)		   
+	59	Complete and single-copy BUSCOs (S)	   
+	2725	Complete and duplicated BUSCOs (D)	   
+	11	Fragmented BUSCOs (F)			   
+	10	Missing BUSCOs (M)			   
+	2805	Total BUSCO groups searched		   
+
+Assembly Statistics:
+	26	Number of scaffolds
+	48	Number of contigs
+	2289074707	Total length
+	0.000%	Percent gaps
+	107 MB	Scaffold N50
+```
 
 ## Count chromosome length, TE content and gene content from index, gff and gtf files.
 ### chromosome length
