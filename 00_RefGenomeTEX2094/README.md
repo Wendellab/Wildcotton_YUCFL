@@ -39,6 +39,20 @@ Dt TE: 521810461 bp, 61.12%
 
 ### Gene
 ```
+[weixuan@nova-login-1 00_RefTX0294]$ awk '
+$3=="gene" {
+    if($1~/^Ah_/) at++
+    else if($1~/^Dh_/) dt++
+}
+END {
+    print "At genes:", at
+    print "Dt genes:", dt
+}
+' AD1.TX2094.v2.gtf
+At genes: 41720
+Dt genes: 43651
+
+
 [weixuan@nova-login-1 00_RefTX0294]$ grep -v '^#' AD1.TX2094.v2.gtf \
 | awk '$3=="gene" && $1~/^Ah_/{print $1"\t"$4-1"\t"$5}' \
 | sort -k1,1 -k2,2n \
