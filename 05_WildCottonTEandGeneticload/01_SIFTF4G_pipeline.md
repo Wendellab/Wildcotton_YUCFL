@@ -1,6 +1,6 @@
 ## SIFT4G
 
-### Build database
+### 1. Build database
 
 ```
 #!/bin/bash
@@ -27,7 +27,7 @@ singularity exec \
     perl make-SIFT-db-all.pl \
     -config test_files/gossypium_hirsutum.txt
 ```
-### Configuration file 
+### 2. Configuration file 
 ```
 GENETIC_CODE_TABLE=1
 GENETIC_CODE_TABLENAME=Standard
@@ -64,7 +64,7 @@ ENS_PATTERN=ENS
 SINGLE_RECORD_PATTERN=:change:_aa1valid_dbsnp.singleRecord
 ```
 
-### Subset n381 from `YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf` and run SIFT4G
+### 3. Subset n381 from `YUCFLAD2AD4_n392.AhDh.combined.bi.rehead.id.vcf` and run SIFT4G
 ```
 #!/bin/bash
 #SBATCH --nodes=1
@@ -103,7 +103,7 @@ java -Djava.awt.headless=true -jar SIFT4G_Annotator.jar \
     -t
 ```
 
-### Filter the high confident deleterious mutation sites from `xls` file, and extract genotype only from n381 VCF, then combine SIFT4G score with VCF. Finally keep only the genotype of outgroup AD4 is `0/0`.
+### 4. Filter the high confident deleterious mutation sites from `xls` file, and extract genotype only from n381 VCF, then combine SIFT4G score with VCF. Finally keep only the genotype of outgroup AD4 is `0/0`.
 ```
 ml vcftools bcftools
 awk 'NR>1 && /DELETERIOUS/ && !/Low confidence/ {print $1"\t"$2-1"\t"$2"\t"$13}' AD1AD4_n381_bi.recode.nofixed_SIFTannotations.xls > highconf_deleterious.bed
