@@ -90,8 +90,6 @@ cd $Dir
 #mkdir $output1
 
 module load sentieon-genomics/202308.02-e2gz6fb
-export SENTIEON_LICENSE=reimu.las.iastate.edu:8990
-
 #joint SNP calling:
 
 cat list_gvcf_YUC_n158.txt | sentieon driver --interval Ah_$seq -t $thr -r $ref --algo GVCFtyper --emit_mode all $TMPDIR/$output1.Ah_$seq.vcf -
