@@ -237,4 +237,6 @@ pixy --stats pi dxy --bypass_invariant_check --chromosomes $seqD --vcf $vcf --po
 
 micromamba deactivate
 ```
-
+1. Plot NJ + LEA + PI_HAT: [00_Plot_FLYUC_NJ_LEA_PIHAT.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/04_%20GeneticStructurewithinYUCFL/00_Plot_FLYUC_NJ_LEA_PIHAT.R) 
+2. Add LEA as piechart on map: [01_Plot_FLYUC_pie.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/04_%20GeneticStructurewithinYUCFL/01_Plot_FLYUC_pie.R)
+3. Put PCA + LEA pie + Dxy vs geographic distant: [Fig2_He_Pixy_TwoPCA.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/04_%20GeneticStructurewithinYUCFL/Fig2_He_Pixy_TwoPCA.R) 
