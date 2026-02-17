@@ -1,7 +1,7 @@
 Need Josh and Tony's input here for the reference genome assmbely and annotation
 
 ##
-###
+### BUSCO score
 ```
 # BUSCO version is: 5.8.2 
 # The lineage dataset is: eudicotyledons_odb12 (Creation date: 2025-04-11, number of genomes: 76, number of BUSCOs: 2805)
