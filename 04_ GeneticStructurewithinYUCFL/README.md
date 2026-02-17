@@ -191,3 +191,50 @@ module load r
 
 Rscript PCA_plot.R
 ```
+#
+### Pixy (dxy tabulate by site)
+#### tabluating dxy by site (total 25 sites)
+```
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem=100G 
+#SBATCH --time=2-00:00:00
+#SBATCH --mail-user=weixuan@iastate.edu
+#SBATCH --mail-type=ALL
+#SBATCH --output="joboutput/job.pixy_YUC158.%J.out"
+#SBATCH --job-name="pixy_YUC158"
+#SBATCH --array=1-13
+
+mkdir -p 
+
+seq=$(printf %02d ${SLURM_ARRAY_TASK_ID})
+
+seqA="Ah_"$seq
+seqD="Dh_"$seq
+
+thr=30 #NUMBER_THREADS
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/04_Pixy_n380/00_vcf_nofixed/outputn380_combined/AD1_n380.AhDh.combined.rehead.vcf.gz 
+outputfolder=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/04_Pixy_n380/01_output_n350_25Pop
+output1=AD1350_25Pop
+
+ml bcftools
+bcftools query -l /lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/04_Pixy_n380/00_vcf_nofixed/outputn380_combined/AD1_n380.AhDh.combined.rehead.vcf.gz  | awk -F'_' '{print $0 "\t" $2}' > pixy_populationlist_7group.txt
+awk -F'_' '{print $0 "\t" $2"_"$3}' pixy_populationlist_7group.txt |  cut -f1,3 |  sed 's/\tGD_[^\t]*/\tGD/' |  grep -v -E 'LR1|LR2|Cultivar' > pixy_populationlist_25Poplist.txt
+
+module purge
+
+module load py-numpy/1.26.3-py310-gntgk2n
+module load micromamba/1.4.2-7jjmfkf
+eval "$(micromamba shell hook --shell=bash)"
+micromamba activate /lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/envs/pixy_env
+
+echo $seqA
+echo $seqD
+
+pixy --stats pi dxy --bypass_invariant_check --chromosomes $seqA --vcf $vcf --populations pixy_populationlist_25Poplist.txt --window_size 10000 --n_cores $thr --output_folder $outputfolder --output_prefix $output1.$seqA
+pixy --stats pi dxy --bypass_invariant_check --chromosomes $seqD --vcf $vcf --populations pixy_populationlist_25Poplist.txt --window_size 10000 --n_cores $thr --output_folder $outputfolder --output_prefix $output1.$seqD
+
+micromamba deactivate
+```
+
