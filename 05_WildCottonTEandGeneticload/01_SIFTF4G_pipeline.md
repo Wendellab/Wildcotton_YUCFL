@@ -115,6 +115,7 @@ vcftools --vcf AD1AD4_n381_bi.recode.nofixed_SIFTpredictions.vcf \
   
 awk 'NR>1 && /DELETERIOUS/ && !/Low confidence/ { print $1":"$2"\t"$13}' AD1AD4_n381_bi.recode.nofixed_SIFTannotations.xls > sift_score_map.txt
 
+## below is kind like left_join in R
 awk 'BEGIN{OFS="\t"} FNR==NR{sift[$1]=$2; next} /^CHROM/{print $0,"SIFT_SCORE"; next}
 {pos=$1":"$2; print $0,(pos in sift ? sift[pos] : "NA")}' sift_score_map.txt highconf_gt.GT.FORMAT > highconf_gt_with_score.tsv
 
