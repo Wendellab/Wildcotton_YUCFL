@@ -150,7 +150,7 @@ Cactus requires the input phylogeny to be strict binary: A binary tree is a tree
 A rooted tree can be problematic, because this creates a multifurcation at the root, which sonLib.nxnewick cannot parse (it expects strictly binary or fully bracketed Newick).
 I think the easiest way to fix this is Chatgpt, which gives you a tree to start off.
 
-![alt text](https://github.com/WeixuanPlant/JingPangenome/blob/main/Geneticload/01_GenomeSelection/trailtree2.nwk.jpg)
+![alt text](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/05_WildCottonTEandGeneticload/trailtree2.nwk.jpg)
 ```
 (((Solanum_lycopersicum,(Daucus_carota,Helianthus_annuus)),Camellia_pitardii),((Vitis_davidii,((Arabidopsis_thaliana,((Gossypium_hirsutum,Gossypium_raimondii),Hibiscus_yunnanensis)),(Citrus_sinensis,(Salix_dunnii,Medicago_truncatula)))),(Ananas_comosus,(Oryza_sativa,Zea_mays))));
 ```
