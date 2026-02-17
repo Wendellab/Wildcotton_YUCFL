@@ -193,7 +193,7 @@ slidingRuns <- slidingRUNS.run(
 
 save.image(file = "AD1_n380.final.RData")
 ```
-plot ROH usin [Final_LD_plot.R
+plot ROH using [Final_LD_plot.R
 ](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/Final_LD_plot.R)
 
 #
@@ -207,4 +207,4 @@ vcftools --vcf AD1_n380.AhDh.combined.rehead.recode.vcf \
          --out AD1_n380.AhDh.combined.bi
 ```
 #
-Final figure [PixyAD1.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/PixyAD1.R)
+Final figure plot [PixyAD1.R](https://github.com/Wendellab/Wildcotton_YUCFL/blob/main/03_GenomicDiversityComparisonbetweenWildCottons/PixyAD1.R)
