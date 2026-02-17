@@ -94,9 +94,100 @@ module load r
 
 Rscript PCA_plot.R
 ```
-
+#
 ### FL
-#### 
+#### subset samples for N166 (Florida only) and N196 (Florida + 30 domesticated cotton) 
+```
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/00_AD1AD2AD4_n392/09_HeInbreedRoh/AD1_n380.AhDh.combined.rehead.recode.vcf
+ml vcftools bcftools
+
+bcftools query -l $vcf | grep -E 'FL|Cultivar|LR' > FLn196.txt
+bcftools query -l $vcf | grep -E 'FL' > FLn166.txt
+
+vcftools \
+  --vcf $vcf \
+  --keep FLn196.txt \
+  --maf 0.01 \
+  --min-alleles 2 \
+  --max-alleles 2 \
+  --recode \
+  --recode-INFO-all \
+  --out FLn196.maf001
+
+vcftools \
+  --vcf $vcf \
+  --keep FLn166.txt \
+  --maf 0.01 \
+  --min-alleles 2 \
+  --max-alleles 2 \
+  --recode \
+  --recode-INFO-all \
+  --out FLn166.maf001
+
+ml vcftools bcftools
+
+bcftools annotate -Oz \
+  -o FLn196.maf001.id.vcf.gz \
+  --set-id '%CHROM:%POS:%REF:%ALT' \
+  FLn196.maf001.recode.vcf
+ 
+bcftools annotate -Oz \
+  -o FLn166.maf001.id.vcf.gz \
+  --set-id '%CHROM:%POS:%REF:%ALT' \
+  FLn166.maf001.recode.vcf 
+```
+#### PCA and PI_HAT relatedness 
+```
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/02_AD1FL_n166/FLn166.maf001.id.vcf.gz 
+plink=/lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/plink
+output=FLn166
+
+
+#Filtering LD by Plink 
+$plink --threads 5 --vcf $vcf \
+--indep-pairwise 50 10 0.1 --allow-extra-chr --const-fid \
+--out $output
+
+$plink --threads 5 --extract $output.prune.in  \
+--make-bed --allow-extra-chr --const-fid --out $output \
+--recode vcf-iid --vcf $vcf
+
+$plink --threads 5 --vcf $vcf \
+--allow-extra-chr --const-fid \
+--extract $output.prune.in --recode \
+--make-bed --pca 20 var-wts --genome --distance square 1-ibs --out $output
+
+paste -d '\t'  $output.mdist.id $output.mdist >  $output.distmatrix
+
+module load r
+
+Rscript PCA_plot.R
+```
+#### NJ tree and LEA 
 ```
 
+vcf=/lustre/hdd/LAS/jfw-lab/weixuan/08_YUCFL_popgene/01_mergedVCFs/02_AD1FL_n166/FLn196.maf001.id.vcf.gz
+plink=/lustre/hdd/LAS/jfw-lab/weixuan/00_BioinformaticTools/plink
+output=FLn196
+
+
+#Filtering LD by Plink 
+$plink --threads 5 --vcf $vcf \
+--indep-pairwise 50 10 0.1 --allow-extra-chr --const-fid \
+--out $output
+
+$plink --threads 5 --extract $output.prune.in  \
+--make-bed --allow-extra-chr --const-fid --out $output \
+--recode vcf-iid --vcf $vcf
+
+$plink --threads 5 --vcf $vcf \
+--allow-extra-chr --const-fid \
+--extract $output.prune.in --recode \
+--make-bed --pca 20 var-wts --genome --distance square 1-ibs --out $output
+
+paste -d '\t'  $output.mdist.id $output.mdist >  $output.distmatrix
+
+module load r
+
+Rscript PCA_plot.R
 ```
