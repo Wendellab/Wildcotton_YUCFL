@@ -1,4 +1,8 @@
-Need Josh and Tony's input here for the reference genome assmbely and annotation
+Need Josh input here for the reference genome assmbely
+
+### Annotation
+1) [Orient](./orient.org)
+2) [Annotate](./annotate.org)
 
 ##
 ### BUSCO score
