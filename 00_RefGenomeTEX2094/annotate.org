@@ -1,0 +1,267 @@
+#+title: Annotate Genome 
+#+PROPERTY:  header-args :var DIR=(file-name-directory buffer-file-name)
+
+** CODE
+*** Run EDTA Raw
+#+begin_src shell :tangle 1-edta-raw/run.sh
+# SET type using `--export=type=[ltr|tir|helitron|line|sine]`
+name=AD1.TX2094.v2
+
+ml apptainer
+
+EDTA_raw () {
+    singularity exec --no-home \
+        --env=BLAST_USAGE_REPORT=false \
+        -B /usr/bin/which -B $DIR -B $TMPDIR \
+        $DIR/EDTA-2.2.2.sif EDTA_raw.pl "$@"
+}
+
+zcat $DIR/4-genomes/$name.fa.gz > $TMPDIR/$name.fa
+
+cd $TMPDIR
+
+EDTA_raw --genome $TMPDIR/$name.fa \
+    --species others \
+    --type $type \
+    --threads $SLURM_CPUS_PER_TASK
+
+tar -vcf $DIR/1-edta-raw/$name.$type.tar $name.fa.mod*
+#+end_src
+
+#+RESULTS:
+
+*** Combine EDTA
+#+begin_src shell :tangle 2-edta/run.sh
+name=AD1.TX2094.v2
+
+ml apptainer
+
+EDTA () {
+    singularity exec --no-home \
+        --env=BLAST_USAGE_REPORT=false \
+        -B /usr/bin/which -B $DIR -B $TMPDIR \
+        $DIR/EDTA-2.2.2.sif EDTA.pl "$@"
+}
+
+zcat $DIR/4-genomes/$name.fa.gz > $TMPDIR/$name.fa
+for type in ltr tir helitron line sine; do
+    tar -C $TMPDIR -xf $DIR/1-edta-raw/$name.$type.tar
+done
+
+cd $TMPDIR
+
+EDTA --genome $TMPDIR/$name.fa \
+    --overwrite 0 \
+    --sensitive 1 \
+    --anno 0 \
+    --evaluate 0 \
+    --threads $SLURM_CPUS_PER_TASK
+
+tar -vcf $DIR/2-edta/$name.tar $name.fa.mod*
+#+end_src
+*** RepeatMasker
+#+begin_src sh :tangle 3-repeatmasker/run.sh
+name=${genomes[$SLURM_ARRAY_TASK_ID]}
+
+ml apptainer
+
+RepeatMasker () {
+    singularity exec --no-home \
+        --env=BLAST_USAGE_REPORT=false \
+        -B /usr/bin/which -B $DIR -B $TMPDIR \
+        $DIR/EDTA-2.2.2.sif RepeatMasker "$@"
+}
+
+tar -C $TMPDIR -xf $DIR/2-edta/$name.tar \
+    $name.fa.mod.EDTA.TElib.fa
+zcat $DIR/4-genomes/$name.fa.gz \
+    >$TMPDIR/$name.fa
+
+RepeatMasker -e ncbi -pa $SLURM_CPUS_PER_TASK \
+    -q -div 40 -cutoff 225 -gff \
+    -lib $TMPDIR/$name.fa.mod.EDTA.TElib.fa \
+    $TMPDIR/$name.fa
+
+perl -i -nle 's/\s+DNA\s+/\tDNA\/unknown\t/; print $_' \
+    $TMPDIR/$name.fa.out
+
+rm $TMPDIR/$name.fa.mod.EDTA.TElib.fa* \
+    $TMPDIR/$name.fa
+
+tar -vcf $DIR/3-repeatmasker/$name.tar \
+    -C $TMPDIR \
+    --transform 's:^\./::' \
+    --show-transformed-names \
+    .
+#+end_src
+
+*** Run braker3
+#+begin_src sh :tangle 4-braker3/run.sh
+name=AD1.TX2094.v2
+
+ml apptainer  bedtools/2.31.1
+
+mkdir $TMPDIR/home
+cp $HOME/.gm_key $TMPDIR/home
+
+zcat $DIR/0-ref/Viridiplantae.fa.gz > $TMPDIR/Viridiplantae.fa
+zcat $DIR/1-orient/4-genomes/$name.fa.gz > $TMPDIR/$name.fa
+tar -Oxf $DIR/3-repeatmasker/$name.tar \
+    $name.fa.out.gff > $TMPDIR/$name.repeats.gff3
+
+bedtools maskfasta -soft \
+    -fi  $TMPDIR/$name.fa \
+    -bed $TMPDIR/$name.repeats.gff3 \
+    -fo  $TMPDIR/$name.mask.fa
+
+cd $TMPDIR
+
+singularity exec --cleanenv -H $TMPDIR/home \
+    -B $DIR -B $TMPDIR \
+    $DIR/braker3-v3.0.7.6.sif \
+    cp -r /opt/Augustus/config $TMPDIR/
+    
+singularity exec --cleanenv -H $TMPDIR/home \
+    -B $DIR -B $TMPDIR \
+    -B $TMPDIR/config:/opt/Augustus/config \
+    $DIR/braker3-v3.0.7.6.sif braker.pl \
+    --species=$name \
+    --softmasking \
+    --genome=$TMPDIR/$name.mask.fa \
+    --prot_seq=$TMPDIR/Viridiplantae.fa \
+    --threads=$SLURM_CPUS_PER_TASK \
+    --workingdir=$TMPDIR 
+
+rm $TMPDIR/$name.fa
+rm $TMPDIR/$name.mask.fa
+rm $TMPDIR/$name.repeats.gff3
+rm $TMPDIR/Viridiplantae.fa
+
+tar -vcf $DIR/4-braker3/$name.tar \
+    -C $TMPDIR \
+    --transform 's:^\./::' \
+    --show-transformed-names \
+    .
+#+end_src
+
+*** Add braker CDS to EDTA run
+#+begin_src shell :tangle 5-add-cds/run.sh
+ml apptainer
+EDTA () {
+    singularity exec --no-home \
+        --env=BLAST_USAGE_REPORT=false \
+        -B /usr/bin/which -B $DIR -B $TMPDIR \
+        $DIR/EDTA-2.2.2.sif EDTA.pl "$@"
+}
+
+name=AD1.TX2094.v2
+
+tar -C $TMPDIR/ -xf $DIR/2-edta/$name.tar
+tar -C $TMPDIR -xf $DIR/4-braker3/$name.tar \
+    braker.codingseq
+zcat $DIR/4-genomes/$name.fa.gz > $TMPDIR/$name.fa
+
+cd $TMPDIR
+EDTA --genome $TMPDIR/$name.fa \
+     --cds $TMPDIR/braker.codingseq \
+     --sensitive 1 \
+     --anno 1 \
+     --evaluate 1 \
+     --threads $SLURM_CPUS_PER_TASK
+
+rm $TMPDIR/$name.fa
+rm $TMPDIR/braker.codingseq
+
+tar -C $TMPDIR --transform 's#^./##' \
+    -cf $DIR/5-add-cds/$name.tar .
+#+end_src
+
+*** Run braker3 again
+#+begin_src sh :tangle 6-braker3-rerun/run.sh
+name=AD1.TX2094.v2
+
+ml apptainer bedtools/2.31.1
+
+mkdir $TMPDIR/home
+cp $HOME/.gm_key $TMPDIR/home
+
+zcat $DIR/0-ref/Viridiplantae.fa.gz > $TMPDIR/Viridiplantae.fa
+zcat $DIR/4-genomes/$name.fa.gz > $TMPDIR/$name.fa
+tar -Oxf $DIR/5-add-cds/$name.tar \
+    $name.fa.mod.EDTA.TEanno.gff3 \
+    > $TMPDIR/$name.repeats.gff3
+
+bedtools maskfasta -soft \
+    -fi  $TMPDIR/$name.fa \
+    -bed $TMPDIR/$name.repeats.gff3 \
+    -fo  $TMPDIR/$name.mask.fa
+
+cd $TMPDIR
+
+singularity exec --cleanenv -H $TMPDIR/home \
+    -B $DIR -B $TMPDIR \
+    $DIR/braker3-v3.0.7.6.sif \
+    cp -r /opt/Augustus/config $TMPDIR/
+
+singularity exec --cleanenv -H $TMPDIR/home \
+    -B $DIR -B $TMPDIR \
+    -B $TMPDIR/config:/opt/Augustus/config \
+    $DIR/braker3-v3.0.7.6.sif braker.pl \
+    --species=$name \
+    --softmasking \
+    --genome=$TMPDIR/$name.mask.fa \
+    --prot_seq=$TMPDIR/Viridiplantae.fa \
+    --threads=$SLURM_CPUS_PER_TASK \
+    --workingdir=$TMPDIR
+
+rm $TMPDIR/$name.fa
+rm $TMPDIR/$name.mask.fa
+rm $TMPDIR/$name.repeats.gff3
+rm $TMPDIR/Viridiplantae.fa
+
+tar -vcf $DIR/6-braker3-rerun/$name.tar \
+    -C $TMPDIR \
+    --transform 's:^\./::' \
+    --show-transformed-names \
+    .
+#+end_src
+
+
+*** Rename
+
+#+header: :var genomes=../0-ref/readme.org:genomes[,0]
+#+begin_src sh :tangle 7-rename/run.sh
+prefix="Gohir"
+
+name=AD1.TX2094.v2
+
+tar -xf $DIR/6-braker3-rerun/$name.tar \
+    -C $TMPDIR/ braker.gtf
+
+awk '$3 == "transcript" && $6 >= 0.90 {
+                     sub("[.]t[0-9]*", "", $9);
+                     print $9 }' $TMPDIR/braker.gtf \
+                         > $TMPDIR/fltr.lst
+
+grep -w -f $TMPDIR/fltr.lst $TMPDIR/braker.gtf |
+    awk '$1 != chr { chr=$1;
+                     c=1;
+                     num=substr(chr, length(chr)-1, 2);
+                     if(chr ~ /^[AD]([hbmdes]|tt)_/){
+                       num= substr(chr, 0,1) "" num
+                     }
+                   }
+                 $3 == "gene" {
+                      name = $9;
+                      rep=sprintf("%s_%s.%sG%04d00",
+                                  sample, spec, num, c++)
+                      }
+                1 { gsub(name, rep, $9);
+                    sub("\\.t", ".", $9);
+                    print }' \
+                     FS="\t" OFS="\t" spec=$prefix sample=$name |
+    gzip > $DIR/7-rename/$name.gtf.gz
+
+rm $TMPDIR/braker.gtf $TMPDIR/fltr.lst
+#+end_src
+
